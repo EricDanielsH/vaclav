@@ -86,9 +86,13 @@ export default function SearchBar({ xmlData }: { xmlData: string }) {
     const conversations = data.conversation.u;
 
     // Filter the conversations
-    const filteredConversations = conversations.filter((conversation: any) => {
-      return conversation._.toLowerCase().includes(search.toLowerCase());
-    });
+    // If the search term is "*", return all conversations
+    const filteredConversations =
+      search === "*"
+        ? conversations
+        : conversations.filter((conversation: any) => {
+          return conversation._.toLowerCase().includes(search.toLowerCase());
+        });
 
     filteredConversations.forEach((conversation: any) => {
       const { age, gender } = conversation.$;
