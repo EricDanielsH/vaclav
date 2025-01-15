@@ -1,4 +1,5 @@
-import SearchBar from "../components/SearchBar";
+"use client";
+
 import dynamic from "next/dynamic";
 
 const SearchBar = dynamic(() => import("../components/SearchBar"), {
