@@ -1,15 +1,12 @@
 import SearchBar from "../components/SearchBar";
-import fs from "fs";
-import path from "path";
+import dynamic from "next/dynamic";
+
+const SearchBar = dynamic(() => import("../components/SearchBar"), {
+  // Only load the component on the client side
+  ssr: false,
+});
 
 export default function Hero() {
-  const filePath = path.join(
-    process.cwd(),
-    "public",
-    "clean_conversations.xml",
-  );
-  const xmlData = fs.readFileSync(filePath, "utf-8");
-
   return (
     <div className="flex items-center justify-center flex-col min-h-[90vh]">
       <div className="text-center mb-6">
@@ -21,7 +18,7 @@ export default function Hero() {
         </h2>
       </div>
 
-      <SearchBar xmlData={xmlData} />
+      <SearchBar />
     </div>
   );
 }

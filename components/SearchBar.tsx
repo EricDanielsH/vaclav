@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { parseXML } from "../utils/parseXML";
 import {
   BarChart,
@@ -29,7 +29,10 @@ interface Statistics {
   total: number;
 }
 
-export default function SearchBar({ xmlData }: { xmlData: string }) {
+export default function SearchBar() {
+  const [xmlData, setXmlData] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
   const [displayedResults, setDisplayedResults] = useState([]); // For the current visible results
@@ -37,6 +40,27 @@ export default function SearchBar({ xmlData }: { xmlData: string }) {
   const [hasSearched, setHasSearched] = useState(false); // Tracks if the user has searched anything
   const [currentPage, setCurrentPage] = useState(1);
   const resultsPerPage = 10;
+
+  // Fetch the XML data
+  useEffect(() => {
+    const fetchXML = async () => {
+      try {
+        const response = await fetch("/clean_conversations.xml");
+        const data = await response.text();
+        setXmlData(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching XML with error:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchXML();
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   const getAgeGroup = (age: number) => {
     if (age < 18) return "0-17";
@@ -157,8 +181,8 @@ export default function SearchBar({ xmlData }: { xmlData: string }) {
         <div className="">
           <section className="mb-8">
             {
-              <div className="mt-4 flex flex-col items-center">
-                <h2 className="text-xl font-bold">Results</h2>
+              <div className="mt-4 flex flex-col">
+                <h2 className="text-xl font-bold mb-2">Results</h2>
                 <ul
                   className="max-h-48 overflow-y-auto w-full max-w-xs md:max-w-2xl overflow-x-auto
                   p-4 border border-gray-200 bg-gray-200 dark:bg-gray-800 dark:border-gray-800 rounded-lg"
@@ -193,7 +217,7 @@ export default function SearchBar({ xmlData }: { xmlData: string }) {
             {/* Display the results in a graph */}
             <section>
               <div className="min-w-[300px] max-w-[300px] md:min-w-[500px] w-full">
-                <h3 className="text-xl font-semibold">Visualisation</h3>
+                <h3 className="text-xl font-semibold mb-2">Visualisation</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
