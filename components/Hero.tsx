@@ -15,7 +15,7 @@ export default function Hero() {
           The most epic XML word searcher
         </h1>
         <h2 className="text-lg mt-2">
-          Are you ready to search your next phrase?
+          Are you ready to search your next concordance?
         </h2>
       </div>
 

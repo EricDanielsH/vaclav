@@ -109,30 +109,47 @@ export default function SearchBar() {
     // Get the conversations
     const conversations = data.conversation.u;
 
-    // Filter the conversations
-    // If the search term is "*", return all conversations
-    const filteredConversations =
-      search === "*"
-        ? conversations
-        : conversations.filter((conversation: any) => {
-          return conversation._.toLowerCase().includes(search.toLowerCase());
-        });
+    // Filter conversations and extract concordances
+    const filteredConversations = conversations
+      .filter((conversation: any) =>
+        search === "*"
+          ? true
+          : conversation._.toLowerCase().includes(search.toLowerCase()),
+      )
+      .map((conversation: any) => {
+        const { age, gender } = conversation.$;
+        const text = conversation._;
 
-    filteredConversations.forEach((conversation: any) => {
-      const { age, gender } = conversation.$;
+        // Extract snippet around the keyword
+        const index = text.toLowerCase().indexOf(search.toLowerCase());
+        const start = Math.max(0, index - 10); // 10 characters before the match
+        const end = Math.min(text.length, index + search.length + 10); // 30 characters after the match
 
-      // Update the stats
-      stats.total++;
-      gender == "male" ? stats.male++ : stats.female++;
-      const ageGroup = getAgeGroup(parseInt(age));
-      stats.ageGroups[ageGroup] = stats.ageGroups[ageGroup]
-        ? stats.ageGroups[ageGroup] + 1
-        : 1;
-    });
+        let snippet = text.slice(start, end);
+        // Add ellipsis if the snippet is not the full text
+        if (start > 0) snippet = `...${snippet}`;
+        if (end < text.length) snippet = `${snippet}...`;
+
+        // Update statistics
+        stats.total++;
+        gender === "male" ? stats.male++ : stats.female++;
+        const ageGroup = getAgeGroup(parseInt(age));
+        stats.ageGroups[ageGroup] = stats.ageGroups[ageGroup]
+          ? stats.ageGroups[ageGroup] + 1
+          : 1;
+
+        return {
+          text,
+          snippet,
+          age,
+          gender,
+        };
+      });
 
     // Set the new results and stats
     setResults(filteredConversations);
-    setDisplayedResults(filteredConversations.slice(0, resultsPerPage)); // Display the first 10 (resultsPerPage) results
+    // Display the first 10 (resultsPerPage) results
+    setDisplayedResults(filteredConversations.slice(0, resultsPerPage));
     setStatistics(stats);
     setHasSearched(true);
     setCurrentPage(1);
@@ -183,18 +200,21 @@ export default function SearchBar() {
             {
               <div className="mt-4 flex flex-col">
                 <h2 className="text-xl font-bold mb-2">Results</h2>
-                <ul
-                  className="max-h-48 overflow-y-auto w-full max-w-xs md:max-w-2xl overflow-x-auto
-                  p-4 border border-gray-200 bg-gray-200 dark:bg-gray-800 dark:border-gray-800 rounded-lg"
-                >
+                <ul className="max-h-48 overflow-y-auto w-full max-w-xs md:max-w-2xl overflow-x-auto p-4 border border-gray-200 bg-gray-200 dark:bg-gray-800 dark:border-gray-800 rounded-lg">
                   {displayedResults.map((result: any, index: number) => (
                     <li key={index} className="mt-2 flex flex-col">
-                      <span className="font-bold"> Text: </span>
-                      {result._}
-                      <span className="font-bold"> Age: </span>
-                      {result.$.age}
-                      <span className="font-bold"> Gender: </span>
-                      {result.$.gender}
+                      <span className="font-bold">Snippet:</span>
+                      <p
+                        className="text-gray-800 dark:text-gray-200"
+                        dangerouslySetInnerHTML={{
+                          __html: result.snippet.replace(
+                            new RegExp(search, "gi"),
+                            (match: any) => `<mark>${match}</mark>`,
+                          ),
+                        }}
+                      />
+                      <span className="font-bold">Age:</span> {result.age}
+                      <span className="font-bold">Gender:</span> {result.gender}
                       <span className="font-bold">
                         _______________________________
                       </span>
