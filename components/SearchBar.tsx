@@ -12,12 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Statistics {
   male: number;
@@ -37,8 +32,11 @@ interface Statistics {
 export default function SearchBar({ xmlData }: { xmlData: string }) {
   const [search, setSearch] = useState("");
   const [results, setResults] = useState([]);
+  const [displayedResults, setDisplayedResults] = useState([]); // For the current visible results
   const [statistics, setStatistics] = useState<Statistics | null>(null);
-  const [hasSearched, setHasSearched] = useState(false); // Track whether search has been initiated
+  const [hasSearched, setHasSearched] = useState(false); // Tracks if the user has searched anything
+  const [currentPage, setCurrentPage] = useState(1);
+  const resultsPerPage = 10;
 
   const getAgeGroup = (age: number) => {
     if (age < 18) return "0-17";
@@ -48,6 +46,13 @@ export default function SearchBar({ xmlData }: { xmlData: string }) {
     if (age < 55) return "45-54";
     if (age < 65) return "55-64";
     return "65+";
+  };
+
+  const handleShowMore = () => {
+    const nextPage = currentPage + 1;
+    const nextResults = results.slice(0, nextPage * resultsPerPage);
+    setDisplayedResults(nextResults);
+    setCurrentPage(nextPage);
   };
 
   const handleSearch = async () => {
@@ -99,8 +104,10 @@ export default function SearchBar({ xmlData }: { xmlData: string }) {
 
     // Set the new results and stats
     setResults(filteredConversations);
+    setDisplayedResults(filteredConversations.slice(0, resultsPerPage)); // Display the first 10 (resultsPerPage) results
     setStatistics(stats);
     setHasSearched(true);
+    setCurrentPage(1);
   };
 
   // Prepare chart data
@@ -152,7 +159,7 @@ export default function SearchBar({ xmlData }: { xmlData: string }) {
                   className="max-h-48 overflow-y-auto w-full max-w-xs md:max-w-2xl overflow-x-auto
                   p-4 border border-gray-200 bg-gray-200 dark:bg-gray-800 dark:border-gray-800 rounded-lg"
                 >
-                  {results.map((result: any, index: number) => (
+                  {displayedResults.map((result: any, index: number) => (
                     <li key={index} className="mt-2 flex flex-col">
                       <span className="font-bold"> Text: </span>
                       {result._}
@@ -165,6 +172,14 @@ export default function SearchBar({ xmlData }: { xmlData: string }) {
                       </span>
                     </li>
                   ))}
+                  {results.length > displayedResults.length && (
+                    <button
+                      onClick={handleShowMore}
+                      className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg"
+                    >
+                      Show More
+                    </button>
+                  )}
                 </ul>
               </div>
             }
